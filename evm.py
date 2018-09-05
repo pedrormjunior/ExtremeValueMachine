@@ -33,7 +33,7 @@ def cosine_pdist(X):
 dist_func_lookup = {
     "cosine":{"cdist":cosine_cdist,
               "pdist":cosine_pdist},
-    
+
     "euclidean":{"cdist":euclidean_cdist,
                  "pdist":euclidean_pdist}
 }
@@ -116,7 +116,7 @@ def reduce_model(points,weibulls,labels,labels_to_reduce=None):
     keep = np.array([],dtype=int)
     for ulabel in ulabels:
         ind = np.where(labels == ulabel)
-        if ulabel in labels_to_reduce: 
+        if ulabel in labels_to_reduce:
             print("...reducing model for label {}".format(ulabel))
             keep_ind = set_cover(points[ind],[weibulls[i] for i in ind[0]])
             keep = np.concatenate((keep,ind[0][keep_ind]))
@@ -218,7 +218,7 @@ def letter_test(train_fname,test_fname):
         print Xtrain.shape,ytrain.shape
     with timer("...loading test data"):
         Xtest, ytest = load_data(test_fname)
-        print Xtest.shape,ytest.shape        
+        print Xtest.shape,ytest.shape
     with timer("...fitting train set"):
         weibulls = fit(Xtrain,ytrain)
     with timer("...reducing model"):

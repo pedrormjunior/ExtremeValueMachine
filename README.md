@@ -1,4 +1,4 @@
-This is an implementation of the Extreme Value Machine by Rudd et al., with minor changes from the original work. 
+This is an implementation of the Extreme Value Machine by Rudd et al., with minor changes from the original work.
 
 Dependencies:
 
@@ -27,4 +27,3 @@ Please feel free to use this code for whatever purposes you see fit. We only ask
   year={2018},
   publisher={IEEE}
 }
- 
