@@ -7,7 +7,6 @@ import time
 from contextlib import contextmanager
 from multiprocessing import Pool,cpu_count
 import itertools as it
-import argparse
 
 @contextmanager
 def timer(message):
@@ -38,37 +37,14 @@ dist_func_lookup = {
                  "pdist":euclidean_pdist}
 }
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--tailsize",
-                    type=int,
-                    help="number of points that constitute \'extrema\'",
-                    default=50)
-parser.add_argument("--cover_threshold",
-                    type=float,
-                    help="probabilistic threshold to designate redundancy between points",
-                    default=0.5)
-parser.add_argument("--distance",
-                    type=str,
-                    default="euclidean",
-                    choices=dist_func_lookup.keys())
-parser.add_argument("--nfuse",
-                    type=int,
-                    help="number of extreme vectors to fuse over",
-                    default=4)
-parser.add_argument(
-    "--margin_scale",
-    type=float,
-    help="multiplier by which to scale the margin distribution",
-    default=0.5)
-
 # set parameters; default if no command line arguments
-args = parser.parse_args()
-tailsize = args.tailsize
-cover_threshold = args.cover_threshold
-cdist_func = dist_func_lookup[args.distance]["cdist"]
-pdist_func = dist_func_lookup[args.distance]["pdist"]
-num_to_fuse = args.nfuse
-margin_scale=args.margin_scale
+tailsize = 50
+cover_threshold = 0.5
+distance = 'euclidean'
+cdist_func = dist_func_lookup[distance]["cdist"]
+pdist_func = dist_func_lookup[distance]["pdist"]
+num_to_fuse = 4
+margin_scale= 0.5
 
 def set_cover_greedy(universe,subsets,cost=lambda x:1.0):
     """
