@@ -124,6 +124,7 @@ def fuse_prob_for_label(prob_mat,num_to_fuse):
     Fuse over num_to_fuse extreme vectors to obtain
     probability of sample inclusion (PSI)
     """
+    num_to_fuse = min(num_to_fuse, prob_mat.shape[0])
     return np.average(np.partition(prob_mat,-num_to_fuse,axis=0)[-num_to_fuse:,:],axis=0)
 
 def fit(X,y):
