@@ -160,7 +160,6 @@ def predict(X,points,weibulls,labels):
     fused_probs = np.array(fused_probs)
     max_ind = np.argmax(fused_probs,axis=0)
     predicted_labels = ulabels[max_ind]
-    confidence = fused_probs[max_ind]
     return predicted_labels,fused_probs
 
 def load_data(fname):
