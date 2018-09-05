@@ -191,7 +191,7 @@ def load_data(fname):
     with open(fname) as f:
         data = f.read().splitlines()
     data = [x.split(",") for x in data]
-    labels = [x[0] for x in data]
+    labels = [ord(x[0]) - ord('A') + 1 for x in data]
     data = [map(lambda y: float(y),x[1:]) for x in data]
     return np.array(data),np.array(labels)
 
