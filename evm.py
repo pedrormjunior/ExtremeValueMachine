@@ -37,14 +37,9 @@ dist_func_lookup = {
                  "pdist":euclidean_pdist}
 }
 
-# set parameters; default if no command line arguments
-tailsize = 50
-cover_threshold = 0.5
 distance = 'euclidean'
 cdist_func = dist_func_lookup[distance]["cdist"]
 pdist_func = dist_func_lookup[distance]["pdist"]
-num_to_fuse = 4
-margin_scale= 0.5
 
 def set_cover_greedy(universe,subsets,cost=lambda x:1.0):
     """
@@ -60,7 +55,7 @@ def set_cover_greedy(universe,subsets,cost=lambda x:1.0):
         cover_indices.append(max_index)
     return cover_indices
 
-def set_cover(points,weibulls,solver=set_cover_greedy):
+def set_cover(points,weibulls,cover_threshold,solver=set_cover_greedy):
     """
     Generic wrapper for set cover. Takes a solver function.
     Could do a Linear Programming approximation, but the
@@ -78,7 +73,7 @@ def set_cover(points,weibulls,solver=set_cover_greedy):
     keep_indices = solver(universe,subsets)
     return keep_indices
 
-def reduce_model(points,weibulls,labels,labels_to_reduce=None):
+def reduce_model(points,weibulls,labels,labels_to_reduce=None, cover_threshold=0.5):
     """
     Model reduction routine. Calls off to set cover.
     """
@@ -94,7 +89,7 @@ def reduce_model(points,weibulls,labels,labels_to_reduce=None):
         ind = np.where(labels == ulabel)
         if ulabel in labels_to_reduce:
             print("...reducing model for label {}".format(ulabel))
-            keep_ind = set_cover(points[ind],[weibulls[i] for i in ind[0]])
+            keep_ind = set_cover(points[ind],[weibulls[i] for i in ind[0]],cover_threshold)
             keep = np.concatenate((keep,ind[0][keep_ind]))
         else:
             keep = np.concatenate((keep,ind[0]))
@@ -105,8 +100,7 @@ def reduce_model(points,weibulls,labels,labels_to_reduce=None):
 
 def weibull_fit_parallel(args):
     """Parallelized for efficiency"""
-    global tailsize
-    dists,row,labels = args
+    dists,row,labels,tailsize = args
     nearest = np.partition(dists[np.where(labels != labels[row])],tailsize)
     mr = libmr.MR()
     mr.fit_low(nearest,tailsize)
@@ -127,28 +121,26 @@ def fuse_prob_for_label(prob_mat,num_to_fuse):
     num_to_fuse = min(num_to_fuse, prob_mat.shape[0])
     return np.average(np.partition(prob_mat,-num_to_fuse,axis=0)[-num_to_fuse:,:],axis=0)
 
-def fit(X,y):
+def fit(X,y, tailsize=50, margin_scale=0.5):
     """
     Analogous to scikit-learn\'s fit method.
     """
-    global margin_scale
     d_mat = margin_scale*pdist_func(X)
     p = Pool(cpu_count())
     row_range = range(len(d_mat))
-    args = zip(d_mat,row_range,[y for i in row_range])
+    args = zip(d_mat,row_range,[y for i in row_range], [tailsize] * len(d_mat))
     with timer("...getting weibulls"):
         weibulls = p.map(weibull_fit_parallel, args)
     p.close()
     p.join()
     return weibulls
 
-def predict(X,points,weibulls,labels):
+def predict(X,points,weibulls,labels, num_to_fuse=4):
     """
     Analogous to scikit-learn's predict method
     except takes a few more arguments which
     constitute the actual model.
     """
-    global num_to_fuse
     d_mat = cdist_func(points,X).astype(np.float64)
     p = Pool(cpu_count())
     probs = np.array(p.map(weibull_eval_parallel,zip(d_mat,weibulls)))
