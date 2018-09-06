@@ -5,7 +5,6 @@ import scipy.spatial.distance
 import sklearn.metrics.pairwise
 import time
 from contextlib import contextmanager
-from multiprocessing import Pool,cpu_count
 import itertools as it
 
 @contextmanager
@@ -63,10 +62,7 @@ def set_cover(points,weibulls,cover_threshold,solver=set_cover_greedy):
     """
     universe = range(len(points))
     d_mat = pdist_func(points)
-    p = Pool(cpu_count())
-    probs = np.array(p.map(weibull_eval_parallel,zip(d_mat,weibulls)))
-    p.close()
-    p.join()
+    probs = np.array(map(weibull_eval_parallel,zip(d_mat,weibulls)))
     thresholded = zip(*np.where(probs >= cover_threshold))
     subsets = {k:tuple(set(x[1] for x in v)) for k,v in it.groupby(thresholded, key=lambda x:x[0])}
     subsets = [subsets[i] for i in universe]
@@ -126,13 +122,10 @@ def fit(X,y, tailsize=50, margin_scale=0.5):
     Analogous to scikit-learn\'s fit method.
     """
     d_mat = margin_scale*pdist_func(X)
-    p = Pool(cpu_count())
     row_range = range(len(d_mat))
     args = zip(d_mat,row_range,[y for i in row_range], [tailsize] * len(d_mat))
     with timer("...getting weibulls"):
-        weibulls = p.map(weibull_fit_parallel, args)
-    p.close()
-    p.join()
+        weibulls = map(weibull_fit_parallel, args)
     return weibulls
 
 def predict(X,points,weibulls,labels, num_to_fuse=4):
@@ -142,10 +135,7 @@ def predict(X,points,weibulls,labels, num_to_fuse=4):
     constitute the actual model.
     """
     d_mat = cdist_func(points,X).astype(np.float64)
-    p = Pool(cpu_count())
-    probs = np.array(p.map(weibull_eval_parallel,zip(d_mat,weibulls)))
-    p.close()
-    p.join()
+    probs = np.array(map(weibull_eval_parallel,zip(d_mat,weibulls)))
     ulabels = np.unique(labels)
     fused_probs = []
     for ulabel in ulabels:
