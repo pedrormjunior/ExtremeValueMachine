@@ -13,7 +13,7 @@ the same.  In this case, tailsize should be increased to that to have
 at least `quant_min_diff_tailsize` different values in the tail for
 properly fitting the distribution.  (If all values are the same, and
 Exception is raised.)"""
-quant_min_diff_tailsize = 3
+quant_min_diff_tailsize = 2
 
 @contextmanager
 def timer(message):
