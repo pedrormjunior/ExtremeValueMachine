@@ -107,6 +107,7 @@ def weibull_fit_parallel(args):
     dists,row,labels,tailsize = args
     nearest = dists[np.where(labels != labels[row])].copy()
     nearest.sort()
+    tailsize = min(tailsize, nearest.shape[0])
     settail = set(nearest[:tailsize])
     while len(settail) < quant_min_diff_tailsize:
         settail.add(nearest[tailsize])
