@@ -7,6 +7,14 @@ import time
 from contextlib import contextmanager
 import itertools as it
 
+"""This value is necessary for the cases in which the tailsize is too
+small so that the values selected for fitting the distribution are all
+the same.  In this case, tailsize should be increased to that to have
+at least `quant_min_diff_tailsize` different values in the tail for
+properly fitting the distribution.  (If all values are the same, and
+Exception is raised.)"""
+quant_min_diff_tailsize = 3
+
 @contextmanager
 def timer(message):
     """
@@ -97,7 +105,12 @@ def reduce_model(points,weibulls,labels,labels_to_reduce=None, cover_threshold=0
 def weibull_fit_parallel(args):
     """Parallelized for efficiency"""
     dists,row,labels,tailsize = args
-    nearest = np.partition(dists[np.where(labels != labels[row])],tailsize)
+    nearest = dists[np.where(labels != labels[row])].copy()
+    nearest.sort()
+    settail = set(nearest[:tailsize])
+    while len(settail) < quant_min_diff_tailsize:
+        settail.add(nearest[tailsize])
+        tailsize += 1
     mr = libmr.MR()
     mr.fit_low(nearest,tailsize)
     return str(mr)
