@@ -59,7 +59,15 @@ def set_cover_greedy(universe,subsets,cost=lambda x:1.0):
     while covered != universe:
         max_index = (np.array(map(lambda x: len(x - covered),subsets))).argmax()
         covered |= subsets[max_index]
-        cover_indices.append(max_index)
+        if max_index not in cover_indices:
+            cover_indices.append(max_index)
+        else:
+            """Possibly the remaining instances are outliers and that is the
+reason they were not included in `covered` so far.  In this case, we
+will avoid an infinity loop and force the inclusion of those outliers
+after breaking this loop."""
+            break
+    cover_indices += universe - covered
     return cover_indices
 
 def set_cover(points,weibulls,cover_threshold,solver=set_cover_greedy):
@@ -73,6 +81,9 @@ def set_cover(points,weibulls,cover_threshold,solver=set_cover_greedy):
     probs = np.array(map(weibull_eval_parallel,zip(d_mat,weibulls)))
     thresholded = zip(*np.where(probs >= cover_threshold))
     subsets = {k:tuple(set(x[1] for x in v)) for k,v in it.groupby(thresholded, key=lambda x:x[0])}
+    for k in universe:
+        if k not in subsets:
+            subsets[k] = tuple()
     subsets = [subsets[i] for i in universe]
     keep_indices = solver(universe,subsets)
     return keep_indices
